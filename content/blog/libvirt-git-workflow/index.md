@@ -1,0 +1,221 @@
+---
+title: Git workflow for contributing to libvirt
+date: "2016-05-07T22:40:32.169Z"
+description: Notes on git workflow for contributing to Libvirt
+---
+
+This is my first post where I'll describe the workflow to contribute a patch to
+libvirt's [core C library](http://libvirt.org/git/?p=libvirt.git;a=summary).
+
+Libvirt uses [git](https://git-scm.com/) for version control and source code
+management. This post assumes that you are working on a linux machine, have git
+installed and have the basics(user.name, user.email etc.) setup.
+
+## The Patch Workflow
+Patches are the medium of contribution when it comes to libvirt. Patches can be
+regarding anything like a simple one liner bug fix, changing docs or a large
+feature addition. The gist of the workflow is that you send in only the parts
+where you have made changes(usually via email) and reviewers apply(pull in) the
+patches instead of merging in whole branches like we do in Github's pull
+request based workflow. Once you have sent the patches, the maintainers or
+reviewers will give some feedback or suggest some changes, or if they are
+comfortable with the changes you have made, they will apply the patches.
+Sometimes, it might so occur that you have sent more than one patch and the
+reviewer might apply only some of your patches and might give feedback or might
+even entirely reject the other patches.
+
+Below I will outline the steps involved in sending a patch to libvirt in the
+context of a bugfix.
+
+Let us assume that you have found a fix to a bug numbered **xyz** in the bugzilla
+tracker and you are interested in sending in the fix. Firstly, you open up a
+terminal and clone the git repository obviously.
+
+```shell
+$ git clone git://libvirt.org/libvirt.git
+$ cd libvirt
+```
+
+Now that you have the latest source code, you are good to add in your fix. For
+fun or just as an exercise, you can try compiling the source yourself. More on
+compiling libvirt's source [here](http://libvirt.org/compiling.html).
+
+```shell
+$ git checkout -t origin -b bugfix_xyz # Create a new branch which tracks origin
+# Open your favorite text editor, add the relevent changes in your branch, do
+# not commit yet. Read on for more about committing your changes. Once you have
+# made the changes, make sure that the changes you have written don't break any
+# already working stuff. In case of libvirt, the least you have to do is to get
+# the tests to pass without any warnings. More on testing your changes against
+# libvirt's test suite http://libvirt.org/compiling.html
+$ make check # standard test suite of libvirt
+$ make syntax-check
+$ make -C tests valgrind # checks for memory leaks and uninitialized variables.
+```
+
+Once you get all the tests to pass, you can move on to commit your changes.
+
+### Committing your changes
+Once you have made the relevant changes and the tests pass after your changes,
+you are ready to commit your changes. To do so:
+
+```shell
+$ git add <files that contain your changes>
+$ git commit -s
+# The above command will open up your favorite text editor (vi by default), and
+# you can add in your commit message and details about the commit. The `-s`
+# switch is to sign off the commit.
+```
+
+However, in the development of libvirt, patches are only accepted against the
+current master, and not any release version. So you need to commit on top of the
+latest changes, which would require rebasing your branch with the origin.
+
+```shell
+$ git checkout master
+$ git pull
+$ git checkout bugfix_xyz
+$ git pull --rebase
+# The above command will sync your branch with the master, which has just been
+# synced with origin, and then replay your commits on top of it. This step might
+# require you to fix any conflicts that might occur.
+```
+
+The above steps assume that you are adding all your changes in a single commit.
+Lots of people like to make incremental commits in small steps. What they will
+have to do in order to send in a patch is to squash multiple commits into a
+single commit. The reason for the squashing of multiple commits is explained in
+the next section. To squash the commits, carry out the above rebasing step and:
+
+```shell
+$ git rebase -i
+# This will open up your favorite text editor. Pick the first commit and squash
+# the rest of them, i.e., change the first word on every line except the first
+# line to squash. This tells git that you want to squash all of commits with the
+# word squash into the first commit which has the word pick. Save the file and
+# close it, which will open up another file where you get to edit your commit
+# message. Edit the message accordingly and save and close it. This completes
+# the squashing step.
+```
+We are now set to generate patches out of our changes.
+
+### Creating and sending patches
+Libvirt accepts changes in the form of patches. Once we have committed our
+changes, generating patches from it is very trivial. Assumming you have
+rebased your changes on top of upstream(origin), patches are generated by:
+
+```shell
+$ git format-patch master
+```
+
+The above command will generate patches out of your commits for submission via
+e-mail. Refer the [docs](https://git-scm.com/docs/git-format-patch) for further
+details about the `format-patch` command.
+
+There should be a file **00\*.patch**. It is a standard text file and you can
+open it in your editor to have a look. It contains enough information about the
+commit that it was generated out of like the diff, the commit message etc.,
+along with some metadata.
+
+Coming to the reason about squashing multiple commits into a single commit, if
+one reads the man page of `format-patch`, it clearly mentions that one patch
+file is generated for one commit. Now many open-source organizations, including
+libvirt require that compilation from source should be clean after each patch,
+and the test suite must pass as well. Also, in case of more than one patch being
+submitted, intermediate patches must compile and not cause failures against the
+test suite.
+
+I'll explain the above with an example. Suppose while creating a fix for the bug
+`xyz`, you made incremental commits `c1`, `c2` and `c3`, where `c1` and `c2`
+were simple intermediate commites, which along with `c3` constitute the whole
+fix, i.e., source compiles and test suites pass after the commit `c3` is made.
+If you generate patches directly without squashing, three patch files will be
+generated, say `p1`, `p2`, `p3` corresponding to `c1`, `c2` and `c3`. Since this
+breaks the requirement of intermediate patches not breaking the test suites and
+compiling cleanly, we have to squash commits `c1`, `c2` and `c3` into a single
+commit and then generate a single patch file out of it, which would meet all the
+requirements of a patch.
+
+However, if you are working on a big feature or bugfix, that does not make sense
+to be added in a single commit and would be difficult as well to do so, it is
+encouraged to break up the changes into a series of logical commits, provided
+that the source compiles cleanly and the test suites pass after each commit, the
+reason behind this requirement being that the source should be such that the
+[git bisect](https://git-scm.com/docs/git-bisect) can be run to trace a broken
+commit if any. Once you have a series of commits `c1`, `c2`, ... which meet the
+above requirement, you can generate patches out of them the same way as above;
+rebase the current branch with origin, and then use `git format-patch` to
+generate the patches. Multiple patch files will be created this time, each patch
+corresponding to one commit.
+
+### A Note about using git-notes
+As I said above, the `*.patch` files generated are simple text files, and can be
+viewed in any standard text editor. However, editing the patch files by hand is
+discouraged, for every part of the file is structured to a particular format.
+Although there is one place where one could edit the patch files by hand, which
+would be between the `---` and the diffstat(which mentions what files have been
+changed and by how many insertions and deletions etc.). Generally, this is the
+place to add more details or notes about the patch that you don't want to or
+could not include in the commit message. An example of that would be to simply
+list down the changes being made in the current version of the patch as compared
+to the previous versions of the patches, or adding a note regarding something
+that has to be done in the future etc. Again, one must be careful with editing
+patch files in the text editor, even for the purpose of adding notes. Instead,
+what one could do, and what one should do is, to keep in mind the fact that git
+is awesome and use the built-in tool that git comes along with, *git-notes*.
+
+From the [docs](https://git-scm.com/docs/git-notes) of git-notes, git-notes
+adds, removes, or reads notes attached to objects, without touching the
+objects themselves. You can refer to the docs itself for more description and
+examples, although I will give a brief rundown of how to use git-notes to add
+notes to your patches. Say you want to generate patches for a series of commits
+`c1`, `c2`, ... and want to add notes in the patch files that will be generated.
+To do so:
+
+```shell
+$ git notes add <sha of the commit you want to add notes to>
+# The above will open up a text editor and you can start writing a note. Once
+# you are done, save it and the note will be saved corresponding to that commit.
+# If you are generating patch for a single commit, then you can omit the <sha>
+# assuming that the HEAD is pointing to the commit you want to add a note to.
+# Repeat the above command for all the commits that you want to add a note to.
+# Next, generate the patches the same way as above, but pass a --notes option to
+# tell git to add the notes from commits to their corresponding patch files.
+$ git format-patch master --notes # As taken from the docs
+# The above command will generate the patches as done earlier, but also tell git
+# to add notes saved for the commit sha's to the corresponding patch files. You
+# can open the patch files and observe that the notes have been added after the
+# --- and before the diffstat.
+```
+
+Once you have the patch[es] ready, submit them to the libvirt's mailing list by
+`git send-email`. Some linux distros require you to install a separate package
+`git-email` to be able to use this command.
+
+```shell
+# First, we configure the email specifics
+$ git config sendemail.smtpuser <email>
+$ git config sendemail.smtpserver <your smtp server> # eg., smpt.gmail.com
+$ git config sendemail.smtpencryption tls # or ssl
+$ git config sendemail.smtpserverport 587 # 465 for ssl
+$ git config sendemail.to libvir-list@redhat.com # mailing list to send patches
+```
+
+Having configured that, send the patches simply by:
+
+```shell
+$ git send-email --cover-letter --annotate --no-chain-reply-to *.patch
+# Omit the --cover-letter if you are sending a single patch
+```
+
+Refer the docs for [send-email](https://git-scm.com/docs/git-send-email) for
+more info on the options.
+
+And that is it; this will send your patch to the mailing list. If you receive
+any feedback or comments, modify accordingly and follow the same procedure to
+generate the patches. In the `format-patch` step, add
+`--subject-prefix="PATCH v2"` to create the second version of the patches.
+
+
+Please send across a [mail](mailto:nishithshah.2211@gmail.com) if there is any
+error in this post or a step is described wrongly.

@@ -19,7 +19,7 @@ const SEO = ({ description, lang, meta, title }) => {
             title
             description
             social {
-              twitter
+              email
             }
           }
         }
@@ -54,19 +54,19 @@ const SEO = ({ description, lang, meta, title }) => {
           content: `website`,
         },
         {
-          name: `twitter:card`,
+          name: `email:card`,
           content: `summary`,
         },
         {
-          name: `twitter:creator`,
-          content: site.siteMetadata.social.twitter,
+          name: `email:creator`,
+          content: site.siteMetadata.social.email,
         },
         {
-          name: `twitter:title`,
+          name: `email:title`,
           content: title,
         },
         {
-          name: `twitter:description`,
+          name: `email:description`,
           content: metaDescription,
         },
       ].concat(meta)}
