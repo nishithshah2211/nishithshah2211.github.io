@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[Pandorica]]></title><description><![CDATA[An attempt to document some boring stuff]]></description><link>https://nishithshah2211.github.io</link><generator>GatsbyJS</generator><lastBuildDate>Sat, 25 Apr 2020 04:52:34 GMT</lastBuildDate><item><title><![CDATA[Git workflow for contributing to libvirt]]></title><description><![CDATA[This is my first post where I’ll describe the workflow to contribute a patch to
+libvirt’s core C library. Libvirt uses git for version…]]></description><link>https://nishithshah2211.github.io/libvirt-git-workflow/</link><guid isPermaLink="false">https://nishithshah2211.github.io/libvirt-git-workflow/</guid><pubDate>Sat, 07 May 2016 22:40:32 GMT</pubDate><content:encoded>&lt;p&gt;This is my first post where I’ll describe the workflow to contribute a patch to
+libvirt’s &lt;a href=&quot;http://libvirt.org/git/?p=libvirt.git;a=summary&quot;&gt;core C library&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Libvirt uses &lt;a href=&quot;https://git-scm.com/&quot;&gt;git&lt;/a&gt; for version control and source code
+management. This post assumes that you are working on a linux machine, have git
+installed and have the basics(user.name, user.email etc.) setup.&lt;/p&gt;
+&lt;h2&gt;The Patch Workflow&lt;/h2&gt;
+&lt;p&gt;Patches are the medium of contribution when it comes to libvirt. Patches can be
+regarding anything like a simple one liner bug fix, changing docs or a large
+feature addition. The gist of the workflow is that you send in only the parts
+where you have made changes(usually via email) and reviewers apply(pull in) the
+patches instead of merging in whole branches like we do in Github’s pull
+request based workflow. Once you have sent the patches, the maintainers or
+reviewers will give some feedback or suggest some changes, or if they are
+comfortable with the changes you have made, they will apply the patches.
+Sometimes, it might so occur that you have sent more than one patch and the
+reviewer might apply only some of your patches and might give feedback or might
+even entirely reject the other patches.&lt;/p&gt;
+&lt;p&gt;Below I will outline the steps involved in sending a patch to libvirt in the
+context of a bugfix.&lt;/p&gt;
+&lt;p&gt;Let us assume that you have found a fix to a bug numbered &lt;strong&gt;xyz&lt;/strong&gt; in the bugzilla
+tracker and you are interested in sending in the fix. Firstly, you open up a
+terminal and clone the git repository obviously.&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;shell&quot;&gt;&lt;pre class=&quot;language-shell&quot;&gt;&lt;code class=&quot;language-shell&quot;&gt;$ &lt;span class=&quot;token function&quot;&gt;git&lt;/span&gt; clone git://libvirt.org/libvirt.git
+$ &lt;span class=&quot;token builtin class-name&quot;&gt;cd&lt;/span&gt; libvirt&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now that you have the latest source code, you are good to add in your fix. For
+fun or just as an exercise, you can try compiling the source yourself. More on
+compiling libvirt’s source &lt;a href=&quot;http://libvirt.org/compiling.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;shell&quot;&gt;&lt;pre class=&quot;language-shell&quot;&gt;&lt;code class=&quot;language-shell&quot;&gt;$ &lt;span class=&quot;token function&quot;&gt;git&lt;/span&gt; checkout -t origin -b bugfix_xyz &lt;span class=&quot;token comment&quot;&gt;# Create a new branch which tracks origin&lt;/span&gt;
+&lt;span class=&quot;token comment&quot;&gt;# Open your favorite text editor, add the relevent changes in your branch, do&lt;/span&gt;
+&lt;span class=&quot;token comment&quot;&gt;# not commit yet. Read on for more about committing your changes. Once you have&lt;/span&gt;
+&lt;span class=&quot;token comment&quot;&gt;# made the changes, make sure that the changes you have written don&apos;t break any&lt;/span&gt;
+&lt;span class=&quot;token comment&quot;&gt;# already working stuff. In case of libvirt, the least you have to do is to get&lt;/span&gt;
+&lt;span class=&quot;token comment&quot;&gt;# the tests to pass without any warnings. More on testing your changes against&lt;/span&gt;
+&lt;span class=&quot;token comment&quot;&gt;# libvirt&apos;s test suite http://libvirt.org/compiling.html&lt;/span&gt;
+$ &lt;span class=&quot;token function&quot;&gt;make&lt;/span&gt; check &lt;span class=&quot;token comment&quot;&gt;# standard test suite of libvirt&lt;/span&gt;
+$ &lt;span class=&quot;token function&quot;&gt;make&lt;/span&gt; syntax-check
+$ &lt;span class=&quot;token function&quot;&gt;make&lt;/span&gt; -C tests valgrind &lt;span class=&quot;token comment&quot;&gt;# checks for memory leaks and uninitialized variables.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Once you get all the tests to pass, you can move on to commit your changes.&lt;/p&gt;
+&lt;h3&gt;Committing your changes&lt;/h3&gt;
+&lt;p&gt;Once you have made the relevant changes and the tests pass after your changes,
+you are ready to commit your changes. To do so:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;shell&quot;&gt;&lt;pre class=&quot;language-shell&quot;&gt;&lt;code class=&quot;language-shell&quot;&gt;$ &lt;span class=&quot;token function&quot;&gt;git&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;add&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;&amp;lt;&lt;/span&gt;files that contain your changes&lt;span class=&quot;token operator&quot;&gt;&gt;&lt;/span&gt;
+$ &lt;span class=&quot;token function&quot;&gt;git&lt;/span&gt; commit -s
+&lt;span class=&quot;token comment&quot;&gt;# The above command will open up your favorite text editor (vi by default), and&lt;/span&gt;
+&lt;span class=&quot;token comment&quot;&gt;# you can add in your commit message and details about the commit. The `-s`&lt;/span&gt;
+&lt;span class=&quot;token comment&quot;&gt;# switch is to sign off the commit.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;However, in the development of libvirt, patches are only accepted against the
+current master, and not any release version. So you need to commit on top of the
+latest changes, which would require rebasing your branch with the origin.&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;shell&quot;&gt;&lt;pre class=&quot;language-shell&quot;&gt;&lt;code class=&quot;language-shell&quot;&gt;$ &lt;span class=&quot;token function&quot;&gt;git&lt;/span&gt; checkout master
+$ &lt;span class=&quot;token function&quot;&gt;git&lt;/span&gt; pull
+$ &lt;span class=&quot;token function&quot;&gt;git&lt;/span&gt; checkout bugfix_xyz
+$ &lt;span class=&quot;token function&quot;&gt;git&lt;/span&gt; pull --rebase
+&lt;span class=&quot;token comment&quot;&gt;# The above command will sync your branch with the master, which has just been&lt;/span&gt;
+&lt;span class=&quot;token comment&quot;&gt;# synced with origin, and then replay your commits on top of it. This step might&lt;/span&gt;
+&lt;span class=&quot;token comment&quot;&gt;# require you to fix any conflicts that might occur.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The above steps assume that you are adding all your changes in a single commit.
+Lots of people like to make incremental commits in small steps. What they will
+have to do in order to send in a patch is to squash multiple commits into a
+single commit. The reason for the squashing of multiple commits is explained in
+the next section. To squash the commits, carry out the above rebasing step and:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;shell&quot;&gt;&lt;pre class=&quot;language-shell&quot;&gt;&lt;code class=&quot;language-shell&quot;&gt;$ &lt;span class=&quot;token function&quot;&gt;git&lt;/span&gt; rebase -i
+&lt;span class=&quot;token comment&quot;&gt;# This will open up your favorite text editor. Pick the first commit and squash&lt;/span&gt;
+&lt;span class=&quot;token comment&quot;&gt;# the rest of them, i.e., change the first word on every line except the first&lt;/span&gt;
+&lt;span class=&quot;token comment&quot;&gt;# line to squash. This tells git that you want to squash all of commits with the&lt;/span&gt;
+&lt;span class=&quot;token comment&quot;&gt;# word squash into the first commit which has the word pick. Save the file and&lt;/span&gt;
+&lt;span class=&quot;token comment&quot;&gt;# close it, which will open up another file where you get to edit your commit&lt;/span&gt;
+&lt;span class=&quot;token comment&quot;&gt;# message. Edit the message accordingly and save and close it. This completes&lt;/span&gt;
+&lt;span class=&quot;token comment&quot;&gt;# the squashing step.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We are now set to generate patches out of our changes.&lt;/p&gt;
+&lt;h3&gt;Creating and sending patches&lt;/h3&gt;
+&lt;p&gt;Libvirt accepts changes in the form of patches. Once we have committed our
+changes, generating patches from it is very trivial. Assumming you have
+rebased your changes on top of upstream(origin), patches are generated by:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;shell&quot;&gt;&lt;pre class=&quot;language-shell&quot;&gt;&lt;code class=&quot;language-shell&quot;&gt;$ &lt;span class=&quot;token function&quot;&gt;git&lt;/span&gt; format-patch master&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The above command will generate patches out of your commits for submission via
+e-mail. Refer the &lt;a href=&quot;https://git-scm.com/docs/git-format-patch&quot;&gt;docs&lt;/a&gt; for further
+details about the &lt;code class=&quot;language-text&quot;&gt;format-patch&lt;/code&gt; command.&lt;/p&gt;
+&lt;p&gt;There should be a file &lt;strong&gt;00*.patch&lt;/strong&gt;. It is a standard text file and you can
+open it in your editor to have a look. It contains enough information about the
+commit that it was generated out of like the diff, the commit message etc.,
+along with some metadata.&lt;/p&gt;
+&lt;p&gt;Coming to the reason about squashing multiple commits into a single commit, if
+one reads the man page of &lt;code class=&quot;language-text&quot;&gt;format-patch&lt;/code&gt;, it clearly mentions that one patch
+file is generated for one commit. Now many open-source organizations, including
+libvirt require that compilation from source should be clean after each patch,
+and the test suite must pass as well. Also, in case of more than one patch being
+submitted, intermediate patches must compile and not cause failures against the
+test suite.&lt;/p&gt;
+&lt;p&gt;I’ll explain the above with an example. Suppose while creating a fix for the bug
+&lt;code class=&quot;language-text&quot;&gt;xyz&lt;/code&gt;, you made incremental commits &lt;code class=&quot;language-text&quot;&gt;c1&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;c2&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;c3&lt;/code&gt;, where &lt;code class=&quot;language-text&quot;&gt;c1&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;c2&lt;/code&gt;
+were simple intermediate commites, which along with &lt;code class=&quot;language-text&quot;&gt;c3&lt;/code&gt; constitute the whole
+fix, i.e., source compiles and test suites pass after the commit &lt;code class=&quot;language-text&quot;&gt;c3&lt;/code&gt; is made.
+If you generate patches directly without squashing, three patch files will be
+generated, say &lt;code class=&quot;language-text&quot;&gt;p1&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;p2&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;p3&lt;/code&gt; corresponding to &lt;code class=&quot;language-text&quot;&gt;c1&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;c2&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;c3&lt;/code&gt;. Since this
+breaks the requirement of intermediate patches not breaking the test suites and
+compiling cleanly, we have to squash commits &lt;code class=&quot;language-text&quot;&gt;c1&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;c2&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;c3&lt;/code&gt; into a single
+commit and then generate a single patch file out of it, which would meet all the
+requirements of a patch.&lt;/p&gt;
+&lt;p&gt;However, if you are working on a big feature or bugfix, that does not make sense
+to be added in a single commit and would be difficult as well to do so, it is
+encouraged to break up the changes into a series of logical commits, provided
+that the source compiles cleanly and the test suites pass after each commit, the
+reason behind this requirement being that the source should be such that the
+&lt;a href=&quot;https://git-scm.com/docs/git-bisect&quot;&gt;git bisect&lt;/a&gt; can be run to trace a broken
+commit if any. Once you have a series of commits &lt;code class=&quot;language-text&quot;&gt;c1&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;c2&lt;/code&gt;, … which meet the
+above requirement, you can generate patches out of them the same way as above;
+rebase the current branch with origin, and then use &lt;code class=&quot;language-text&quot;&gt;git format-patch&lt;/code&gt; to
+generate the patches. Multiple patch files will be created this time, each patch
+corresponding to one commit.&lt;/p&gt;
+&lt;h3&gt;A Note about using git-notes&lt;/h3&gt;
+&lt;p&gt;As I said above, the &lt;code class=&quot;language-text&quot;&gt;*.patch&lt;/code&gt; files generated are simple text files, and can be
+viewed in any standard text editor. However, editing the patch files by hand is
+discouraged, for every part of the file is structured to a particular format.
+Although there is one place where one could edit the patch files by hand, which
+would be between the &lt;code class=&quot;language-text&quot;&gt;---&lt;/code&gt; and the diffstat(which mentions what files have been
+changed and by how many insertions and deletions etc.). Generally, this is the
+place to add more details or notes about the patch that you don’t want to or
+could not include in the commit message. An example of that would be to simply
+list down the changes being made in the current version of the patch as compared
+to the previous versions of the patches, or adding a note regarding something
+that has to be done in the future etc. Again, one must be careful with editing
+patch files in the text editor, even for the purpose of adding notes. Instead,
+what one could do, and what one should do is, to keep in mind the fact that git
+is awesome and use the built-in tool that git comes along with, &lt;em&gt;git-notes&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;From the &lt;a href=&quot;https://git-scm.com/docs/git-notes&quot;&gt;docs&lt;/a&gt; of git-notes, git-notes
+adds, removes, or reads notes attached to objects, without touching the
+objects themselves. You can refer to the docs itself for more description and
+examples, although I will give a brief rundown of how to use git-notes to add
+notes to your patches. Say you want to generate patches for a series of commits
+&lt;code class=&quot;language-text&quot;&gt;c1&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;c2&lt;/code&gt;, … and want to add notes in the patch files that will be generated.
+To do so:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;shell&quot;&gt;&lt;pre class=&quot;language-shell&quot;&gt;&lt;code class=&quot;language-shell&quot;&gt;$ &lt;span class=&quot;token function&quot;&gt;git&lt;/span&gt; notes &lt;span class=&quot;token function&quot;&gt;add&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;&amp;lt;&lt;/span&gt;sha of the commit you want to &lt;span class=&quot;token function&quot;&gt;add&lt;/span&gt; notes to&lt;span class=&quot;token operator&quot;&gt;&gt;&lt;/span&gt;
+&lt;span class=&quot;token comment&quot;&gt;# The above will open up a text editor and you can start writing a note. Once&lt;/span&gt;
+&lt;span class=&quot;token comment&quot;&gt;# you are done, save it and the note will be saved corresponding to that commit.&lt;/span&gt;
+&lt;span class=&quot;token comment&quot;&gt;# If you are generating patch for a single commit, then you can omit the &amp;lt;sha&gt;&lt;/span&gt;
+&lt;span class=&quot;token comment&quot;&gt;# assuming that the HEAD is pointing to the commit you want to add a note to.&lt;/span&gt;
+&lt;span class=&quot;token comment&quot;&gt;# Repeat the above command for all the commits that you want to add a note to.&lt;/span&gt;
+&lt;span class=&quot;token comment&quot;&gt;# Next, generate the patches the same way as above, but pass a --notes option to&lt;/span&gt;
+&lt;span class=&quot;token comment&quot;&gt;# tell git to add the notes from commits to their corresponding patch files.&lt;/span&gt;
+$ &lt;span class=&quot;token function&quot;&gt;git&lt;/span&gt; format-patch master --notes &lt;span class=&quot;token comment&quot;&gt;# As taken from the docs&lt;/span&gt;
+&lt;span class=&quot;token comment&quot;&gt;# The above command will generate the patches as done earlier, but also tell git&lt;/span&gt;
+&lt;span class=&quot;token comment&quot;&gt;# to add notes saved for the commit sha&apos;s to the corresponding patch files. You&lt;/span&gt;
+&lt;span class=&quot;token comment&quot;&gt;# can open the patch files and observe that the notes have been added after the&lt;/span&gt;
+&lt;span class=&quot;token comment&quot;&gt;# --- and before the diffstat.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Once you have the patch[es] ready, submit them to the libvirt’s mailing list by
+&lt;code class=&quot;language-text&quot;&gt;git send-email&lt;/code&gt;. Some linux distros require you to install a separate package
+&lt;code class=&quot;language-text&quot;&gt;git-email&lt;/code&gt; to be able to use this command.&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;shell&quot;&gt;&lt;pre class=&quot;language-shell&quot;&gt;&lt;code class=&quot;language-shell&quot;&gt;&lt;span class=&quot;token comment&quot;&gt;# First, we configure the email specifics&lt;/span&gt;
+$ &lt;span class=&quot;token function&quot;&gt;git&lt;/span&gt; config sendemail.smtpuser &lt;span class=&quot;token operator&quot;&gt;&amp;lt;&lt;/span&gt;email&lt;span class=&quot;token operator&quot;&gt;&gt;&lt;/span&gt;
+$ &lt;span class=&quot;token function&quot;&gt;git&lt;/span&gt; config sendemail.smtpserver &lt;span class=&quot;token operator&quot;&gt;&amp;lt;&lt;/span&gt;your smtp server&lt;span class=&quot;token operator&quot;&gt;&gt;&lt;/span&gt; &lt;span class=&quot;token comment&quot;&gt;# eg., smpt.gmail.com&lt;/span&gt;
+$ &lt;span class=&quot;token function&quot;&gt;git&lt;/span&gt; config sendemail.smtpencryption tls &lt;span class=&quot;token comment&quot;&gt;# or ssl&lt;/span&gt;
+$ &lt;span class=&quot;token function&quot;&gt;git&lt;/span&gt; config sendemail.smtpserverport &lt;span class=&quot;token number&quot;&gt;587&lt;/span&gt; &lt;span class=&quot;token comment&quot;&gt;# 465 for ssl&lt;/span&gt;
+$ &lt;span class=&quot;token function&quot;&gt;git&lt;/span&gt; config sendemail.to libvir-list@redhat.com &lt;span class=&quot;token comment&quot;&gt;# mailing list to send patches&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Having configured that, send the patches simply by:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;shell&quot;&gt;&lt;pre class=&quot;language-shell&quot;&gt;&lt;code class=&quot;language-shell&quot;&gt;$ &lt;span class=&quot;token function&quot;&gt;git&lt;/span&gt; send-email --cover-letter --annotate --no-chain-reply-to *.patch
+&lt;span class=&quot;token comment&quot;&gt;# Omit the --cover-letter if you are sending a single patch&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Refer the docs for &lt;a href=&quot;https://git-scm.com/docs/git-send-email&quot;&gt;send-email&lt;/a&gt; for
+more info on the options.&lt;/p&gt;
+&lt;p&gt;And that is it; this will send your patch to the mailing list. If you receive
+any feedback or comments, modify accordingly and follow the same procedure to
+generate the patches. In the &lt;code class=&quot;language-text&quot;&gt;format-patch&lt;/code&gt; step, add
+&lt;code class=&quot;language-text&quot;&gt;--subject-prefix=&amp;quot;PATCH v2&amp;quot;&lt;/code&gt; to create the second version of the patches.&lt;/p&gt;
+&lt;p&gt;Please send across a &lt;a href=&quot;mailto:nishithshah.2211@gmail.com&quot;&gt;mail&lt;/a&gt; if there is any
+error in this post or a step is described wrongly.&lt;/p&gt;</content:encoded></item></channel></rss>
