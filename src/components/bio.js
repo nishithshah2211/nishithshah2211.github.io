@@ -61,6 +61,7 @@ const Bio = () => {
         {` `}
         <a href={`mailto:${social.email}`}>Email me</a>
         {` `}| <a href={`/about`}>About me</a>
+        {` `}| <a href={`/tictactoe`}>MxNxK Tic Tac Toe</a>
       </p>
     </div>
   )
